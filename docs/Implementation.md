@@ -61,7 +61,7 @@ Recursively scans the docs directory for `.md` files, invokes the MarkdownParser
 
 - Scan the docs directory recursively for files with the .md extension
 - Invoke the MarkdownParser on each discovered markdown file
-- Pair each extracted requirement text with its source file path as a named tuple
+- Pair each extracted doc requirement text with its source file path as a DocRequirement named tuple
 
 ## TestRequirementExtractor Requirements
 
@@ -71,8 +71,9 @@ Recursively scans the test directory for all files regardless of extension. For 
 - Search for the exact prefix REQ followed by a colon and a space in test files
 - Extract the text after the REQ prefix as the requirement text
 - Strip leading and trailing whitespace from each extracted requirement text
+- Strip trailing triple quotes from REQ entries to allow inline docstring markers
 - Silently ignore empty REQ entries
-- Pair each extracted requirement text with its source file path as a named tuple
+- Pair each extracted test requirement text with its source file path as a TestRequirement named tuple
 
 ## DuplicateChecker Requirements
 
