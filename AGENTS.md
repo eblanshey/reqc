@@ -85,7 +85,7 @@ The `TestRequirementExtractor` strips trailing triple quotes (`"""` or `'''`) so
 ## Implementation Rules
 
 - Single-file implementation in `stdd.py` — no splitting into modules
-- Python 3.12+ only, stdlib only (no external dependencies)
+- Python 3.11+ only, stdlib only (no external dependencies)
 - All requirements are defined in `docs/Implementation.md` — this is the source of truth
 - Every requirement in `Implementation.md` must have at least one test with a matching `REQ:` docstring
 - Named tuples: `DocRequirement(text, source)` and `TestRequirement(text, source)`

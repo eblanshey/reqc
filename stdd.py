@@ -12,11 +12,39 @@ TestRequirement = namedtuple('TestRequirement', ['text', 'source'])
 
 class ArgParser:
     def parse_args(self, args=None):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--docs', '-d', required=True)
-        parser.add_argument('--tests', '-t', required=True)
-        parser.add_argument('--all', '-a', action='store_true', default=False)
-        return parser.parse_args(args)
+        parser = argparse.ArgumentParser(
+            description='STDD - Spec Test Driven Development tool',
+            epilog=(
+                'Cross-references requirements in Markdown documentation against REQ: markers\n'
+                'in test files to detect missing tests and stale test coverage.\n'
+                '\n'
+                'Output:\n'
+                '  [MISSING]   Requirements in docs with no matching test\n'
+                '  [STALE]     REQ markers in tests with no matching doc requirement\n'
+                '  [IMPLEMENTED]  Matched requirements (shown with --all/-a)\n'
+                '  Summary section with counts for each category\n'
+                '\n'
+                'Examples:\n'
+                '  stdd.py -d docs -t tests\n'
+                '  stdd.py --docs docs --tests tests --all\n'
+                '\n'
+                'Exit codes:\n'
+                '  0  All requirements matched, no issues\n'
+                '  1  Mismatches found (missing or stale tests)\n'
+                '  2  Fatal error (duplicate requirements in docs)'
+            ),
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
+        parser.add_argument('--docs', '-d', required=False, help='Path to the documentation directory containing .md files')
+        parser.add_argument('--tests', '-t', required=False, help='Path to the test directory to scan for REQ: markers')
+        parser.add_argument('--all', '-a', action='store_true', default=False, help='Also show implemented (matched) tests in output')
+        parsed = parser.parse_args(args)
+        if not parsed.docs and not parsed.tests:
+            parser.print_help()
+            sys.exit(0)
+        if not parsed.docs or not parsed.tests:
+            parser.error('the following arguments are required: --docs/-d and --tests/-t')
+        return parsed
 
 
 class MarkdownParser:
@@ -207,5 +235,9 @@ def main(argv=None):
     return 0
 
 
-if __name__ == "__main__":
+def main_cli():
     sys.exit(main())
+
+
+if __name__ == "__main__":
+    main_cli()
