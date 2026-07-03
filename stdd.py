@@ -116,7 +116,7 @@ class TestRequirementExtractor:
                             idx = lower.index("req: ")
                             text = line[idx + 5:].strip()
                             text = text.removesuffix('"""').removesuffix("'''")
-                            if text:
+                            if text and 'req-ignore' not in text:
                                 results.append(TestRequirement(text=text, source=filepath))
         return results
 

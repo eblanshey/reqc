@@ -74,6 +74,7 @@ Recursively scans the test directory for all files regardless of extension. For 
 - Strip leading and trailing whitespace from each extracted requirement text
 - Strip trailing triple quotes from REQ entries to allow inline docstring markers
 - Silently ignore empty REQ entries
+- Skip REQ entries that contain the keyword to filter out false flags
 - Pair each extracted test requirement text with its source file path as a TestRequirement named tuple
 
 ## DuplicateChecker Requirements

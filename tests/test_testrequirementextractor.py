@@ -18,7 +18,7 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
-                f.write('def test_foo():\n    # REQ: User can login\n    pass\n')
+                f.write('def test_foo():\n    # REQ: User can login\n    pass\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -30,7 +30,7 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "notes.txt")
             with open(testfile, "w") as f:
-                f.write('REQ: System must handle errors\n')
+                f.write('REQ: System must handle errors\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -43,7 +43,7 @@ class TestExtractREQ:
             os.makedirs(subdir)
             testfile = os.path.join(subdir, "test_deep.py")
             with open(testfile, "w") as f:
-                f.write('REQ: Deep requirement found\n')
+                f.write('REQ: Deep requirement found\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -55,7 +55,7 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_ws.py")
             with open(testfile, "w") as f:
-                f.write('REQ:    padded text   \n')
+                f.write('REQ:    padded text   \n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -66,7 +66,7 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_quotes.py")
             with open(testfile, "w") as f:
-                f.write('"""REQ: Requirement with trailing quotes"""\n')
+                f.write('"""REQ: Requirement with trailing quotes"""\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -77,21 +77,33 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_empty.py")
             with open(testfile, "w") as f:
-                f.write('REQ: \nREQ:   \nREQ: Valid one\n')
+                f.write('REQ: \nREQ:   \nREQ: Valid one\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "Valid one"
+
+    def test_extract_skips_req_ignore(self):
+        """REQ: Skip REQ entries that contain the keyword to filter out false flags"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testfile = os.path.join(tmpdir, "test_skip.py")
+            with open(testfile, "w") as f:
+                f.write('REQ: Valid requirement\nREQ: Skip this req-ignore\nREQ: Another valid\n')
+            extractor = TestRequirementExtractor()
+            result = extractor.extract(tmpdir)
+            assert len(result) == 2
+            assert result[0].text == "Valid requirement"
+            assert result[1].text == "Another valid"
 
     def test_extract_multiple_reqs_across_files(self):
         """REQ: Extract the text after the REQ prefix as the requirement text"""
         with tempfile.TemporaryDirectory() as tmpdir:
             file1 = os.path.join(tmpdir, "test_a.py")
             with open(file1, "w") as f:
-                f.write('REQ: First req\nREQ: Second req\n')
+                f.write('REQ: First req\nREQ: Second req\n')  # req-ignore
             file2 = os.path.join(tmpdir, "test_b.txt")
             with open(file2, "w") as f:
-                f.write('REQ: Third req\n')
+                f.write('REQ: Third req\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 3
@@ -105,7 +117,7 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
-                f.write('REQ: User can login\n')
+                f.write('REQ: User can login\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
@@ -118,10 +130,10 @@ class TestExtractREQ:
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_case.py")
             with open(testfile, "w") as f:
-                f.write('REQ: Upper case\n')
-                f.write('req: Lower case\n')
-                f.write('Req: Mixed case\n')
-                f.write('ReQ: Weird case\n')
+                f.write('REQ: Upper case\n')  # req-ignore
+                f.write('req: Lower case\n')  # req-ignore
+                f.write('Req: Mixed case\n')  # req-ignore
+                f.write('ReQ: Weird case\n')  # req-ignore
             extractor = TestRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 4
