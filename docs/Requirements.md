@@ -68,7 +68,8 @@ Recursively scans the docs directory for `.md` files, invokes the MarkdownParser
 Recursively scans the test directory for all files regardless of extension. For each file, it reads the content line by line and searches for lines containing the `REQ: ` prefix. The text after the prefix is extracted as a requirement and paired with its source file path.
 
 - Scan the test directory recursively with no file extension filtering
-- Search for the exact prefix REQ followed by a colon and a space in test files
+- Search for the prefix REQ followed by a colon and a space in test files, matching case-insensitively
+- Accept REQ markers in any case variation such as req, Req, REQ, or ReQ
 - Extract the text after the REQ prefix as the requirement text
 - Strip leading and trailing whitespace from each extracted requirement text
 - Strip trailing triple quotes from REQ entries to allow inline docstring markers

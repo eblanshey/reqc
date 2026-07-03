@@ -13,7 +13,7 @@
 stdd/
 ├── stdd.py              # Single-file implementation (all components)
 ├── docs/
-│   └── Implementation.md  # Source of truth for all requirements
+│   └── Requirements.md  # Source of truth for all requirements
 ├── tests/
 │   ├── __init__.py
 │   ├── test_argparser.py
@@ -57,10 +57,10 @@ uv run pytest tests/ -v
 
 ## Verifying Requirements Coverage
 
-Every requirement in `docs/Implementation.md` must have a matching `REQ:` docstring in the tests. Run STDD against itself to verify:
+Every requirement in `docs/Requirements.md` must have a matching `REQ:` docstring in the tests. Run STDD against itself to verify:
 
 ```bash
-uv run python stdd.py --docs docs --tests tests --all
+uv run python stdd.py --docs docs --tests tests
 ```
 
 This will show:
@@ -72,7 +72,7 @@ Exit code 0 means full coverage. Exit code 1 means mismatches exist. Exit code 2
 
 ## REQ: Docstring Convention
 
-Every test function must have a docstring prefixed with `REQ:` that matches the exact requirement text from `docs/Implementation.md`:
+Every test function must have a docstring prefixed with `REQ:` that matches the exact requirement text from `docs/Requirements.md`:
 
 ```python
 def test_something(self):
@@ -86,8 +86,8 @@ The `TestRequirementExtractor` strips trailing triple quotes (`"""` or `'''`) so
 
 - Single-file implementation in `stdd.py` — no splitting into modules
 - Python 3.11+ only, stdlib only (no external dependencies)
-- All requirements are defined in `docs/Implementation.md` — this is the source of truth
-- Every requirement in `Implementation.md` must have at least one test with a matching `REQ:` docstring
+- All requirements are defined in `docs/Requirements.md` — this is the source of truth
+- Every requirement in `Requirements.md` must have at least one test with a matching `REQ:` docstring
 - Named tuples: `DocRequirement(text, source)` and `TestRequirement(text, source)`
 - `ReportGenerator.generate()` returns a string (does not print)
 - `main()` returns an exit code (does not call `sys.exit()`)

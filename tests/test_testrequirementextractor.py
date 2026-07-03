@@ -14,7 +14,7 @@ class TestEmptyDirectory:
 
 class TestExtractREQ:
     def test_extract_finds_req_in_py_file(self):
-        """REQ: Search for the exact prefix REQ followed by a colon and a space in test files"""
+        """REQ: Search for the prefix REQ followed by a colon and a space in test files, matching case-insensitively"""
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
@@ -112,3 +112,21 @@ class TestExtractREQ:
             assert isinstance(result[0], TestRequirement)
             assert result[0].text == "User can login"
             assert result[0].source == testfile
+
+    def test_extract_matches_req_case_insensitively(self):
+        """REQ: Accept REQ markers in any case variation such as req, Req, REQ, or ReQ"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testfile = os.path.join(tmpdir, "test_case.py")
+            with open(testfile, "w") as f:
+                f.write('REQ: Upper case\n')
+                f.write('req: Lower case\n')
+                f.write('Req: Mixed case\n')
+                f.write('ReQ: Weird case\n')
+            extractor = TestRequirementExtractor()
+            result = extractor.extract(tmpdir)
+            assert len(result) == 4
+            texts = [r.text for r in result]
+            assert "Upper case" in texts
+            assert "Lower case" in texts
+            assert "Mixed case" in texts
+            assert "Weird case" in texts

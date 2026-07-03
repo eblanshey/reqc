@@ -111,8 +111,9 @@ class TestRequirementExtractor:
                 filepath = os.path.join(root, filename)
                 with open(filepath, "r", errors="ignore") as f:
                     for line in f:
-                        if "REQ: " in line:
-                            idx = line.index("REQ: ")
+                        lower = line.lower()
+                        if "req: " in lower:
+                            idx = lower.index("req: ")
                             text = line[idx + 5:].strip()
                             text = text.removesuffix('"""').removesuffix("'''")
                             if text:
