@@ -72,7 +72,7 @@ class MarkdownParser:
             heading_match = re.match(r'^(#{1,6})\s', line)
             if heading_match:
                 level = len(heading_match.group(1))
-                if 'Requirements' in line or 'Specifications' in line:
+                if 'requirements' in line.lower() or 'specifications' in line.lower():
                     in_requirements = True
                     req_heading_level = level
                 elif in_requirements:

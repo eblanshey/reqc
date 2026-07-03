@@ -10,7 +10,7 @@
 ## Project Structure
 
 ```
-stdd/
+reqc/
 ├── reqc.py            # Single-file implementation (all components)
 ├── docs/
 │   └── Requirements.md    # Source of truth for all requirements

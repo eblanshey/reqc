@@ -41,7 +41,7 @@ Uses Python's `argparse` module to define and parse command-line arguments. The 
 
 Parses a single Markdown file and extracts requirement texts from sections whose headings contain `Requirements` or `Specifications`. It tracks heading levels to determine section boundaries, skips fenced code blocks and blockquotes, and returns a list of raw requirement strings.
 
-- Detect headings that contain the substring Requirements or Specifications with a case-sensitive match
+- Detect headings that contain the substring Requirements or Specifications with a case-insensitive match
 - Match headings at any level from H1 through H6
 - Allow the substring Requirements or Specifications to appear anywhere within the heading text
 - Extract unordered list items from a requirements section as individual requirements

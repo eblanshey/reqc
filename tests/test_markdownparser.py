@@ -4,7 +4,7 @@ from reqc import MarkdownParser
 
 class TestMarkdownParser:
     def test_detects_requirements_heading(self):
-        """REQ: Detect headings that contain the substring Requirements or Specifications with a case-sensitive match"""
+        """REQ: Detect headings that contain the substring Requirements or Specifications with a case-insensitive match"""
         parser = MarkdownParser()
         content = """# Requirements
 
@@ -15,7 +15,7 @@ class TestMarkdownParser:
         assert [r[0] for r in result] == ["Login must support OAuth2", "Password must be at least 8 chars"]
 
     def test_detects_specifications_heading(self):
-        """REQ: Detect headings that contain the substring Requirements or Specifications with a case-sensitive match"""
+        """REQ: Detect headings that contain the substring Requirements or Specifications with a case-insensitive match"""
         parser = MarkdownParser()
         content = """# Specifications
 
@@ -24,6 +24,30 @@ class TestMarkdownParser:
 """
         result = parser.parse(content)
         assert [r[0] for r in result] == ["API must return JSON", "API must use HTTPS"]
+
+    def test_case_insensitive_heading(self):
+        """REQ: Detect headings that contain the substring Requirements or Specifications with a case-insensitive match"""
+        parser = MarkdownParser()
+        content = """# requirements
+
+- Lowercase item
+"""
+        result = parser.parse(content)
+        assert [r[0] for r in result] == ["Lowercase item"]
+
+        content2 = """## SPECIFICATIONS
+
+- Uppercase item
+"""
+        result2 = parser.parse(content2)
+        assert [r[0] for r in result2] == ["Uppercase item"]
+
+        content3 = """### ReQuIrEmEnTs
+
+- Mixed case item
+"""
+        result3 = parser.parse(content3)
+        assert [r[0] for r in result3] == ["Mixed case item"]
 
     def test_substring_anywhere_in_heading(self):
         """REQ: Allow the substring Requirements or Specifications to appear anywhere within the heading text"""
