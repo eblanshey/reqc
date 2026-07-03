@@ -218,7 +218,7 @@ class TestMarkdownParser:
         assert texts == ["Requirement one", "Requirement two"]
 
     def test_returns_line_numbers_for_requirements(self):
-        """REQ: Pair each extracted doc requirement text with its source file path and line number (e.g. `filename.md:221`) as a DocRequirement named tuple"""
+        """Verify MarkdownParser returns line numbers for each extracted requirement."""
         parser = MarkdownParser()
         content = """# Requirements
 

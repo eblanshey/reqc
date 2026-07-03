@@ -194,7 +194,9 @@ class ReportGenerator:
                 lines.append(f"  [STALE] {req.source}: {req.text}")
             first_section = False
 
-        lines.append("")
+        if not first_section:
+            lines.append("")
+
         lines.append("--- Summary ---")
         lines.append(f"  Requirements:  {total_reqs}")
         lines.append(f"  Targets:       {total_targets}")

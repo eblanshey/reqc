@@ -25,7 +25,6 @@ class TestExtract:
             assert result[1].source == f"{md_file}:4"
 
     def test_ignores_non_md_files(self):
-        """REQ: Scan the reqs directory recursively for files with the .md extension"""
         with tempfile.TemporaryDirectory() as tmpdir:
             md_file = os.path.join(tmpdir, "requirements.md")
             with open(md_file, "w") as f:
