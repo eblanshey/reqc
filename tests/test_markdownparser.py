@@ -1,5 +1,5 @@
 import pytest
-from stdd import MarkdownParser
+from reqc import MarkdownParser
 
 
 class TestMarkdownParser:

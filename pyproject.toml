@@ -1,12 +1,12 @@
 [project]
-name = "stdd"
+name = "reqc"
 version = "0.1.0"
-description = "Spec Test Driven Development - cross-reference doc requirements against tests"
+description = "Requirements coverage audit - cross-reference doc requirements against targets"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]
-stdd = "stdd:main_cli"
+reqc = "reqc:main_cli"
 
 [dependency-groups]
 dev = [

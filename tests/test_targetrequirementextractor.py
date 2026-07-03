@@ -1,50 +1,50 @@
 import os
 import tempfile
 import pytest
-from stdd import TestRequirementExtractor, TestRequirement
+from reqc import TargetRequirementExtractor, TargetRequirement
 
 
 class TestEmptyDirectory:
     def test_extract_returns_empty_list_for_empty_directory(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert result == []
 
 
 class TestExtractREQ:
     def test_extract_finds_req_in_py_file(self):
-        """REQ: Search for the prefix REQ followed by a colon and a space in test files, matching case-insensitively"""
+        """REQ: Search for the prefix REQ followed by a colon and a space in target files, matching case-insensitively"""
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
                 f.write('def test_foo():\n    # REQ: User can login\n    pass\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "User can login"
             assert result[0].source == testfile
 
     def test_extract_finds_req_in_txt_file(self):
-        """REQ: Scan the test directory recursively with no file extension filtering"""
+        """REQ: Scan the target directory recursively with no file extension filtering"""
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "notes.txt")
             with open(testfile, "w") as f:
                 f.write('REQ: System must handle errors\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "System must handle errors"
 
     def test_extract_scans_subdirectories_recursively(self):
-        """REQ: Scan the test directory recursively with no file extension filtering"""
+        """REQ: Scan the target directory recursively with no file extension filtering"""
         with tempfile.TemporaryDirectory() as tmpdir:
             subdir = os.path.join(tmpdir, "sub")
             os.makedirs(subdir)
             testfile = os.path.join(subdir, "test_deep.py")
             with open(testfile, "w") as f:
                 f.write('REQ: Deep requirement found\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "Deep requirement found"
@@ -56,7 +56,7 @@ class TestExtractREQ:
             testfile = os.path.join(tmpdir, "test_ws.py")
             with open(testfile, "w") as f:
                 f.write('REQ:    padded text   \n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "padded text"
@@ -67,7 +67,7 @@ class TestExtractREQ:
             testfile = os.path.join(tmpdir, "test_quotes.py")
             with open(testfile, "w") as f:
                 f.write('"""REQ: Requirement with trailing quotes"""\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "Requirement with trailing quotes"
@@ -78,7 +78,7 @@ class TestExtractREQ:
             testfile = os.path.join(tmpdir, "test_empty.py")
             with open(testfile, "w") as f:
                 f.write('REQ: \nREQ:   \nREQ: Valid one\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "Valid one"
@@ -89,7 +89,7 @@ class TestExtractREQ:
             testfile = os.path.join(tmpdir, "test_skip.py")
             with open(testfile, "w") as f:
                 f.write('REQ: Valid requirement\nREQ: Skip this req-ignore\nREQ: Another valid\n')
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 2
             assert result[0].text == "Valid requirement"
@@ -104,7 +104,7 @@ class TestExtractREQ:
             file2 = os.path.join(tmpdir, "test_b.txt")
             with open(file2, "w") as f:
                 f.write('REQ: Third req\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 3
             texts = [r.text for r in result]
@@ -113,15 +113,15 @@ class TestExtractREQ:
             assert "Third req" in texts
 
     def test_pairs_requirement_with_source_file_path(self):
-        """REQ: Pair each extracted test requirement text with its source file path as a TestRequirement named tuple"""
+        """REQ: Pair each extracted target requirement text with its source file path as a TargetRequirement named tuple"""
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
                 f.write('REQ: User can login\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 1
-            assert isinstance(result[0], TestRequirement)
+            assert isinstance(result[0], TargetRequirement)
             assert result[0].text == "User can login"
             assert result[0].source == testfile
 
@@ -134,7 +134,7 @@ class TestExtractREQ:
                 f.write('req: Lower case\n')  # req-ignore
                 f.write('Req: Mixed case\n')  # req-ignore
                 f.write('ReQ: Weird case\n')  # req-ignore
-            extractor = TestRequirementExtractor()
+            extractor = TargetRequirementExtractor()
             result = extractor.extract(tmpdir)
             assert len(result) == 4
             texts = [r.text for r in result]

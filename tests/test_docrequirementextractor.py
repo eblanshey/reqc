@@ -1,7 +1,7 @@
 import os
 import tempfile
 import pytest
-from stdd import DocRequirementExtractor, DocRequirement
+from reqc import DocRequirementExtractor, DocRequirement
 
 
 class TestExtract:
@@ -25,7 +25,7 @@ class TestExtract:
             assert result[1].source == md_file
 
     def test_ignores_non_md_files(self):
-        """REQ: Scan the docs directory recursively for files with the .md extension"""
+        """REQ: Scan the reqs directory recursively for files with the .md extension"""
         with tempfile.TemporaryDirectory() as tmpdir:
             md_file = os.path.join(tmpdir, "requirements.md")
             with open(md_file, "w") as f:
@@ -39,7 +39,7 @@ class TestExtract:
             assert result[0].text == "REQ1: The system shall authenticate users"
 
     def test_scans_nested_directories_recursively(self):
-        """REQ: Scan the docs directory recursively for files with the .md extension"""
+        """REQ: Scan the reqs directory recursively for files with the .md extension"""
         with tempfile.TemporaryDirectory() as tmpdir:
             top_file = os.path.join(tmpdir, "top.md")
             with open(top_file, "w") as f:

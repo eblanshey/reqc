@@ -1,4 +1,4 @@
-from stdd import DuplicateChecker, DuplicateRequirementError, DocRequirement
+from reqc import DuplicateChecker, DuplicateRequirementError, DocRequirement
 
 
 class TestDuplicateChecker:

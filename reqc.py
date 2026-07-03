@@ -1,4 +1,4 @@
-"""STDD - Spec Test Driven Development tool."""
+"""reqcheck - Requirements coverage audit tool."""
 
 import argparse
 import os
@@ -7,43 +7,47 @@ import sys
 from collections import namedtuple
 
 DocRequirement = namedtuple('DocRequirement', ['text', 'source'])
-TestRequirement = namedtuple('TestRequirement', ['text', 'source'])
+TargetRequirement = namedtuple('TargetRequirement', ['text', 'source'])
 
 
 class ArgParser:
     def parse_args(self, args=None):
         parser = argparse.ArgumentParser(
-            description='STDD - Spec Test Driven Development tool',
+            description='reqcheck - Requirements coverage audit tool',
             epilog=(
                 'Cross-references requirements in Markdown documentation against REQ: markers\n'
-                'in test files to detect missing tests and stale test coverage.\n'
+                'in target files to detect missing coverage and stale targets.\n'
                 '\n'
                 'Output:\n'
-                '  [MISSING]   Requirements in docs with no matching test\n'
-                '  [STALE]     REQ markers in tests with no matching doc requirement\n'
+                '  [MISSING]   Requirements in docs with no matching target\n'
+                '  [STALE]     REQ markers in targets with no matching doc requirement\n'
                 '  [IMPLEMENTED]  Matched requirements (shown with --all/-a)\n'
                 '  Summary section with counts for each category\n'
                 '\n'
+                'Ignoring target requirements:\n'
+                '  Include req-ignore in a REQ: line to skip it, e.g.:\n'
+                '    REQ: some requirement text (req-ignore)\n'
+                '\n'
                 'Examples:\n'
-                '  stdd.py -d docs -t tests\n'
-                '  stdd.py --docs docs --tests tests --all\n'
+                '  reqcheck.py -r docs -t tests\n'
+                '  reqcheck.py --reqs docs --targets tests --all\n'
                 '\n'
                 'Exit codes:\n'
                 '  0  All requirements matched, no issues\n'
-                '  1  Mismatches found (missing or stale tests)\n'
+                '  1  Mismatches found (missing or stale targets)\n'
                 '  2  Fatal error (duplicate requirements in docs)'
             ),
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-        parser.add_argument('--docs', '-d', required=False, help='Path to the documentation directory containing .md files')
-        parser.add_argument('--tests', '-t', required=False, help='Path to the test directory to scan for REQ: markers')
-        parser.add_argument('--all', '-a', action='store_true', default=False, help='Also show implemented (matched) tests in output')
+        parser.add_argument('--reqs', '-r', required=False, help='Path to the requirements directory containing .md files')
+        parser.add_argument('--targets', '-t', required=False, help='Path to the target directory to scan for REQ: markers')
+        parser.add_argument('--all', '-a', action='store_true', default=False, help='Also show implemented (matched) targets in output')
         parsed = parser.parse_args(args)
-        if not parsed.docs and not parsed.tests:
+        if not parsed.reqs and not parsed.targets:
             parser.print_help()
             sys.exit(0)
-        if not parsed.docs or not parsed.tests:
-            parser.error('the following arguments are required: --docs/-d and --tests/-t')
+        if not parsed.reqs or not parsed.targets:
+            parser.error('the following arguments are required: --reqs/-r and --targets/-t')
         return parsed
 
 
@@ -88,9 +92,9 @@ class DocRequirementExtractor:
     def __init__(self, parser=None):
         self.parser = parser if parser is not None else MarkdownParser()
 
-    def extract(self, docs_dir: str) -> list[DocRequirement]:
+    def extract(self, reqs_dir: str) -> list[DocRequirement]:
         requirements = []
-        for root, _dirs, files in os.walk(docs_dir):
+        for root, _dirs, files in os.walk(reqs_dir):
             for filename in files:
                 if filename.endswith('.md'):
                     filepath = os.path.join(root, filename)
@@ -102,10 +106,10 @@ class DocRequirementExtractor:
         return requirements
 
 
-class TestRequirementExtractor:
-    def extract(self, tests_dir: str) -> list[TestRequirement]:
+class TargetRequirementExtractor:
+    def extract(self, targets_dir: str) -> list[TargetRequirement]:
         results = []
-        for root, dirs, files in os.walk(tests_dir):
+        for root, dirs, files in os.walk(targets_dir):
             dirs[:] = [d for d in dirs if d != '__pycache__']
             for filename in files:
                 filepath = os.path.join(root, filename)
@@ -117,7 +121,7 @@ class TestRequirementExtractor:
                             text = line[idx + 5:].strip()
                             text = text.removesuffix('"""').removesuffix("'''")
                             if text and 'req-ignore' not in text:
-                                results.append(TestRequirement(text=text, source=filepath))
+                                results.append(TargetRequirement(text=text, source=filepath))
         return results
 
 
@@ -142,31 +146,31 @@ class DuplicateChecker:
 
 
 class RequirementMatcher:
-    def match(self, doc_reqs, test_reqs):
-        """Cross-reference doc and test requirements.
+    def match(self, doc_reqs, target_reqs):
+        """Cross-reference doc and target requirements.
 
         Returns dict with keys:
-        - 'missing': list of DocRequirement (in docs, no matching test)
-        - 'implemented': list of TestRequirement (in both docs and tests)
-        - 'stale': list of TestRequirement (in tests, no matching doc)
+        - 'missing': list of DocRequirement (in docs, no matching target)
+        - 'implemented': list of TargetRequirement (in both docs and targets)
+        - 'stale': list of TargetRequirement (in targets, no matching doc)
         """
-        test_texts = {tr.text for tr in test_reqs}
+        target_texts = {tr.text for tr in target_reqs}
         doc_texts = {dr.text for dr in doc_reqs}
-        missing = [dr for dr in doc_reqs if dr.text not in test_texts]
-        implemented = [tr for tr in test_reqs if tr.text in doc_texts]
-        stale = [tr for tr in test_reqs if tr.text not in doc_texts]
+        missing = [dr for dr in doc_reqs if dr.text not in target_texts]
+        implemented = [tr for tr in target_reqs if tr.text in doc_texts]
+        stale = [tr for tr in target_reqs if tr.text not in doc_texts]
         return {'missing': missing, 'implemented': implemented, 'stale': stale}
 
 
 class ReportGenerator:
-    def generate(self, missing, implemented, stale, total_docs, total_tests, all_flag=False):
+    def generate(self, missing, implemented, stale, total_reqs, total_targets, all_flag=False):
         lines = []
         first_section = True
 
         if missing:
             if not first_section:
                 lines.append("")
-            lines.append("--- Missing Tests (requirements in docs with no test) ---")
+            lines.append("--- Missing (requirements with no target) ---")
             for req in missing:
                 lines.append(f"  [MISSING] {req.source}: {req.text}")
             first_section = False
@@ -174,7 +178,7 @@ class ReportGenerator:
         if all_flag and implemented:
             if not first_section:
                 lines.append("")
-            lines.append("--- Implemented Tests ---")
+            lines.append("--- Implemented ---")
             for req in implemented:
                 lines.append(f"  [IMPLEMENTED] {req.source}: {req.text}")
             first_section = False
@@ -182,19 +186,19 @@ class ReportGenerator:
         if stale:
             if not first_section:
                 lines.append("")
-            lines.append("--- Stale Tests (tests with no matching requirement) ---")
+            lines.append("--- Stale (targets with no matching requirement) ---")
             for req in stale:
                 lines.append(f"  [STALE] {req.source}: {req.text}")
             first_section = False
 
         lines.append("")
         lines.append("--- Summary ---")
-        lines.append(f"  Requirements in docs:  {total_docs}")
-        lines.append(f"  Requirements in tests: {total_tests}")
-        lines.append(f"  Missing tests:         {len(missing)}")
-        lines.append(f"  Stale tests:           {len(stale)}")
+        lines.append(f"  Requirements:  {total_reqs}")
+        lines.append(f"  Targets:       {total_targets}")
+        lines.append(f"  Missing:       {len(missing)}")
+        lines.append(f"  Stale:         {len(stale)}")
         if all_flag:
-            lines.append(f"  Implemented tests:     {len(implemented)}")
+            lines.append(f"  Implemented:   {len(implemented)}")
         return "\n".join(lines) + "\n"
 
 
@@ -202,17 +206,17 @@ def main(argv=None):
     parser = ArgParser()
     args = parser.parse_args(argv)
 
-    if not os.path.isdir(args.docs):
-        raise FileNotFoundError(f"Docs directory not found: {args.docs}")
+    if not os.path.isdir(args.reqs):
+        raise FileNotFoundError(f"Reqs directory not found: {args.reqs}")
 
-    if not os.path.isdir(args.tests):
-        raise FileNotFoundError(f"Tests directory not found: {args.tests}")
+    if not os.path.isdir(args.targets):
+        raise FileNotFoundError(f"Targets directory not found: {args.targets}")
 
     dre = DocRequirementExtractor()
-    doc_reqs = dre.extract(args.docs)
+    doc_reqs = dre.extract(args.reqs)
 
-    tre = TestRequirementExtractor()
-    test_reqs = tre.extract(args.tests)
+    tre = TargetRequirementExtractor()
+    target_reqs = tre.extract(args.targets)
 
     dc = DuplicateChecker()
     try:
@@ -222,12 +226,12 @@ def main(argv=None):
         return 2
 
     rm = RequirementMatcher()
-    result = rm.match(doc_reqs, test_reqs)
+    result = rm.match(doc_reqs, target_reqs)
 
     rg = ReportGenerator()
     report = rg.generate(
         result['missing'], result['implemented'], result['stale'],
-        len(doc_reqs), len(test_reqs), args.all
+        len(doc_reqs), len(target_reqs), args.all
     )
     print(report)
 

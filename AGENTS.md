@@ -1,25 +1,25 @@
-# STDD - Spec Test Driven Development
+# reqc — Requirements Check
 
 ## Overview
 
-`stdd.py` is a single-file Python tool (stdlib only, no external dependencies) that cross-references requirements defined in Markdown documentation files against `REQ:` markers in a test directory. It detects two categories of mismatches:
+`reqc.py` is a single-file Python tool (stdlib only, no external dependencies) that cross-references requirements defined in Markdown documentation files against `REQ:` markers in target files. It detects two categories of mismatches:
 
-- **Missing tests**: Requirements in docs with no matching test
-- **Stale tests**: `REQ:` markers in test files with no matching doc requirement
+- **Missing coverage**: Requirements in docs with no matching target
+- **Stale targets**: `REQ:` markers in target files with no matching doc requirement
 
 ## Project Structure
 
 ```
 stdd/
-├── stdd.py              # Single-file implementation (all components)
+├── reqc.py            # Single-file implementation (all components)
 ├── docs/
-│   └── Requirements.md  # Source of truth for all requirements
+│   └── Requirements.md    # Source of truth for all requirements
 ├── tests/
 │   ├── __init__.py
 │   ├── test_argparser.py
 │   ├── test_markdownparser.py
 │   ├── test_docrequirementextractor.py
-│   ├── test_testrequirementextractor.py
+│   ├── test_targetrequirementextractor.py
 │   ├── test_duplicatechecker.py
 │   ├── test_requirementmatcher.py
 │   ├── test_reportgenerator.py
@@ -28,16 +28,16 @@ stdd/
 └── .python-version
 ```
 
-## Components in stdd.py
+## Components in reqc.py
 
 | Component | Purpose |
 |-----------|---------|
-| `ArgParser` | CLI argument parsing (`--docs/-d`, `--tests/-t`, `--all/-a`) |
+| `ArgParser` | CLI argument parsing (`--reqs/-r`, `--targets/-t`, `--all/-a`) |
 | `MarkdownParser` | Parses .md files, extracts requirements from headings containing "Requirements" or "Specifications" |
-| `DocRequirementExtractor` | Recursively scans docs/ for .md files, invokes MarkdownParser |
-| `TestRequirementExtractor` | Recursively scans tests/ for `REQ: ` markers in any file type |
+| `DocRequirementExtractor` | Recursively scans reqs/ for .md files, invokes MarkdownParser |
+| `TargetRequirementExtractor` | Recursively scans targets/ for `REQ: ` markers in any file type |
 | `DuplicateChecker` | Validates no duplicate requirement text across doc files |
-| `RequirementMatcher` | Cross-references doc vs test requirements (exact string match) |
+| `RequirementMatcher` | Cross-references doc vs target requirements (exact string match) |
 | `ReportGenerator` | Formats output (missing/stale/implemented + summary) |
 | `main()` | Orchestrates pipeline, returns exit code 0/1/2 |
 
@@ -57,37 +57,37 @@ uv run pytest tests/ -v
 
 ## Verifying Requirements Coverage
 
-Every requirement in `docs/Requirements.md` must have a matching `REQ:` docstring in the tests. Run STDD against itself to verify:
+Every requirement in `docs/Requirements.md` must have a matching `REQ:` marker in the targets. Run reqc against itself to verify:
 
 ```bash
-uv run python stdd.py --docs docs --tests tests
+uv run python reqc.py --reqs docs --targets tests
 ```
 
 This will show:
-- **Missing tests** (requirements in docs with no test) — should be 0
-- **Implemented tests** (requirements in both docs and tests) — should equal total doc requirements
-- **Stale tests** (REQ markers in tests with no matching doc) — should be 0
+- **Missing** (requirements in docs with no target) — should be 0
+- **Implemented** (requirements in both docs and targets) — should equal total doc requirements
+- **Stale** (REQ markers in targets with no matching doc) — should be 0
 
 Exit code 0 means full coverage. Exit code 1 means mismatches exist. Exit code 2 means duplicate requirements were found in docs.
 
-## REQ: Docstring Convention
+## REQ: Marker Convention
 
-Every test function must have a docstring prefixed with `REQ:` that matches the exact requirement text from `docs/Requirements.md`:
+Every target function must have a docstring prefixed with `REQ:` that matches the exact requirement text from `docs/Requirements.md`:
 
 ```python
 def test_something(self):
-    """REQ: Accept a --docs argument with short form -d that specifies the path to the documentation directory"""
+    """REQ: Accept a --reqs argument with short form -r that specifies the path to the requirements directory"""
     ...
 ```
 
-The `TestRequirementExtractor` strips trailing triple quotes (`"""` or `'''`) so these can be inline docstrings.
+The `TargetRequirementExtractor` strips trailing triple quotes (`"""` or `'''`) so these can be inline docstrings.
 
 ## Implementation Rules
 
-- Single-file implementation in `stdd.py` — no splitting into modules
+- Single-file implementation in `reqc.py` — no splitting into modules
 - Python 3.11+ only, stdlib only (no external dependencies)
 - All requirements are defined in `docs/Requirements.md` — this is the source of truth
-- Every requirement in `Requirements.md` must have at least one test with a matching `REQ:` docstring
-- Named tuples: `DocRequirement(text, source)` and `TestRequirement(text, source)`
+- Every requirement in `Requirements.md` must have at least one target with a matching `REQ:` marker
+- Named tuples: `DocRequirement(text, source)` and `TargetRequirement(text, source)`
 - `ReportGenerator.generate()` returns a string (does not print)
 - `main()` returns an exit code (does not call `sys.exit()`)
