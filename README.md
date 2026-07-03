@@ -6,7 +6,7 @@ Pronounced "rexi", `reqc` is a simple single-file Python tool that keeps your re
 
 Requirements are simply bullet points under any Markdown heading that contains the word "Requirements" or "Specifications". That's it — no special syntax, no custom file formats.
 
-You can organize them however you like. Embed them in your regular project docs, create a dedicated spec directory, or anything in between. If using Object Oriented Programming (OOP), for example, you can design your objects and specify requirements for each one. Group by object, feature, by module, by user story — `reqc` doesn't care. It just needs a heading containing "Requirements" or "Specifications" and some bullet points beneath it.
+You can organize them however you like. Embed them in your regular project docs, create a dedicated spec directory, or anything in between. If using Object Oriented Programming (OOP), for example, you can design your objects and specify requirements for each one. Group headings by object, feature, by module, by user story — `reqc` doesn't care. It just needs a heading containing "Requirements" or "Specifications" and some bullet points beneath it.
 
 The exact text of each requirement must appear as a `REQ:` marker somewhere in your target files. Targets are typically code comments in your source, or — if you practice TDD — comments in your unit tests. This creates a spec-test-driven-development workflow:
 
@@ -68,7 +68,7 @@ class TestAuth:
 ```bash
 $ python reqc.py --reqs docs --targets tests
 --- Missing (requirements with no target) ---
-  [MISSING] docs/auth.md: Password reset tokens must expire after 15 minutes
+  [MISSING] docs/auth.md:6: Password reset tokens must expire after 15 minutes
 
 --- Summary ---
   Requirements:  4
@@ -114,7 +114,7 @@ uv run pytest tests/ -v
 Run reqc against itself:
 
 ```bash
-uv run python reqc.py --reqs docs --targets tests
+python reqc.py --reqs docs --targets tests --all
 ```
 
 Exit code 0 means full coverage.

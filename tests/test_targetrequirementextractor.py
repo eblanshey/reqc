@@ -23,7 +23,7 @@ class TestExtractREQ:
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "User can login"
-            assert result[0].source == testfile
+            assert result[0].source == f"{testfile}:2"
 
     def test_extract_finds_req_in_txt_file(self):
         """REQ: Scan the target directory recursively with no file extension filtering"""
@@ -35,6 +35,7 @@ class TestExtractREQ:
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "System must handle errors"
+            assert result[0].source == f"{testfile}:1"
 
     def test_extract_scans_subdirectories_recursively(self):
         """REQ: Scan the target directory recursively with no file extension filtering"""
@@ -48,7 +49,7 @@ class TestExtractREQ:
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "Deep requirement found"
-            assert result[0].source == testfile
+            assert result[0].source == f"{testfile}:1"
 
     def test_extract_strips_leading_trailing_whitespace(self):
         """REQ: Strip leading and trailing whitespace from each extracted requirement text"""
@@ -112,8 +113,8 @@ class TestExtractREQ:
             assert "Second req" in texts
             assert "Third req" in texts
 
-    def test_pairs_requirement_with_source_file_path(self):
-        """REQ: Pair each extracted target requirement text with its source file path as a TargetRequirement named tuple"""
+    def test_pairs_requirement_with_source_file_path_and_line(self):
+        """REQ: Pair each extracted target requirement text with its source file path and line number (e.g. `filename.py:42`) as a TargetRequirement named tuple"""
         with tempfile.TemporaryDirectory() as tmpdir:
             testfile = os.path.join(tmpdir, "test_example.py")
             with open(testfile, "w") as f:
@@ -123,7 +124,7 @@ class TestExtractREQ:
             assert len(result) == 1
             assert isinstance(result[0], TargetRequirement)
             assert result[0].text == "User can login"
-            assert result[0].source == testfile
+            assert result[0].source == f"{testfile}:1"
 
     def test_extract_matches_req_case_insensitively(self):
         """REQ: Accept REQ markers in any case variation such as req, Req, REQ, or ReQ"""

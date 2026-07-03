@@ -54,18 +54,19 @@ Parses a single Markdown file and extracts requirement texts from sections whose
 - Skip content inside fenced code blocks
 - Skip content inside blockquotes
 - End a requirements section at the next heading of equal or higher level
+- End a requirements section at any sub-heading, collecting only list items that appear before sub-headings
 
 ## DocRequirementExtractor Requirements
 
-Recursively scans the reqs directory for `.md` files, invokes the MarkdownParser on each file, and collects the results into a list of named tuples containing the requirement text and its source file path.
+Recursively scans the reqs directory for `.md` files, invokes the MarkdownParser on each file, and collects the results into a list of named tuples containing the requirement text and its source file path with line number.
 
 - Scan the reqs directory recursively for files with the .md extension
 - Invoke the MarkdownParser on each discovered markdown file
-- Pair each extracted doc requirement text with its source file path as a DocRequirement named tuple
+- Pair each extracted doc requirement text with its source file path and line number (e.g. `filename.md:221`) as a DocRequirement named tuple
 
 ## TargetRequirementExtractor Requirements
 
-Recursively scans the target directory for all files regardless of extension. For each file, it reads the content line by line and searches for lines containing the `REQ: ` prefix. The text after the prefix is extracted as a requirement and paired with its source file path.
+Recursively scans the target directory for all files regardless of extension. For each file, it reads the content line by line and searches for lines containing the `REQ: ` prefix. The text after the prefix is extracted as a requirement and paired with its source file path and line number.
 
 - Scan the target directory recursively with no file extension filtering
 - Search for the prefix REQ followed by a colon and a space in target files, matching case-insensitively
@@ -75,7 +76,7 @@ Recursively scans the target directory for all files regardless of extension. Fo
 - Strip trailing triple quotes from REQ entries to allow inline docstring markers
 - Silently ignore empty REQ entries
 - Skip REQ entries that contain the keyword to filter out false flags
-- Pair each extracted target requirement text with its source file path as a TargetRequirement named tuple
+- Pair each extracted target requirement text with its source file path and line number (e.g. `filename.py:42`) as a TargetRequirement named tuple
 
 ## DuplicateChecker Requirements
 
@@ -98,8 +99,8 @@ Cross-references doc requirements against target requirements using exact string
 
 Formats and prints the cross-reference results to stdout. By default it prints only missing and stale items followed by a summary. When the `--all` flag is set, it also prints implemented items.
 
-- Output missing coverage prefixed with MISSING and include the source doc file path
-- Output stale targets prefixed with STALE and include the source target file path
+- Output missing coverage prefixed with MISSING and include the source doc file path with line number
+- Output stale targets prefixed with STALE and include the source target file path with line number
 - Output a summary with counts of total requirements in docs, total in targets, missing, and stale
 - Show implemented targets prefixed with IMPLEMENTED when the all flag is provided
 
@@ -119,12 +120,12 @@ Orchestrates the full pipeline: parses arguments, validates directories, extract
 
 ```
 --- Missing (requirements with no target) ---
-  [MISSING] docs/example.md: The system shall authenticate users
-  [MISSING] docs/example.md: The system shall log errors
+  [MISSING] docs/example.md:12: The system shall authenticate users
+  [MISSING] docs/example.md:15: The system shall log errors
 
 --- Stale (targets with no requirement) ---
-  [STALE] tests/test_auth.py: The system shall support LDAP
-  [STALE] tests/test_old.py: The system shall support OAuth
+  [STALE] tests/test_auth.py:42: The system shall support LDAP
+  [STALE] tests/test_old.py:88: The system shall support OAuth
 
 --- Summary ---
   Requirements in docs:    4
@@ -137,13 +138,13 @@ Orchestrates the full pipeline: parses arguments, validates directories, extract
 
 ```
 --- Missing (requirements with no target) ---
-  [MISSING] docs/example.md: The system shall authenticate users
+  [MISSING] docs/example.md:12: The system shall authenticate users
 
 --- Implemented ---
-  [IMPLEMENTED] tests/test_auth.py: The system shall log errors
+  [IMPLEMENTED] tests/test_auth.py:28: The system shall log errors
 
 --- Stale (targets with no requirement) ---
-  [STALE] tests/test_old.py: The system shall support LDAP
+  [STALE] tests/test_old.py:88: The system shall support LDAP
 
 --- Summary ---
   Requirements in docs:    2

@@ -52,14 +52,15 @@ class ArgParser:
 
 
 class MarkdownParser:
-    def parse(self, content: str) -> list[str]:
+    def parse(self, content: str) -> list[tuple[str, int]]:
         lines = content.split('\n')
         requirements = []
         in_requirements = False
         in_code_block = False
         req_heading_level = 0
 
-        for line in lines:
+        for i, line in enumerate(lines):
+            line_num = i + 1
             stripped = line.strip()
             if stripped == '```':
                 in_code_block = not in_code_block
@@ -74,7 +75,7 @@ class MarkdownParser:
                 if 'Requirements' in line or 'Specifications' in line:
                     in_requirements = True
                     req_heading_level = level
-                elif in_requirements and level <= req_heading_level:
+                elif in_requirements:
                     in_requirements = False
                 continue
 
@@ -83,7 +84,7 @@ class MarkdownParser:
                 if match:
                     text = match.group(2).strip()
                     if text and text not in ('-', '*', '+'):
-                        requirements.append(text)
+                        requirements.append((text, line_num))
 
         return requirements
 
@@ -101,8 +102,9 @@ class DocRequirementExtractor:
                     with open(filepath, 'r') as f:
                         content = f.read()
                     parsed = self.parser.parse(content)
-                    for text in parsed:
-                        requirements.append(DocRequirement(text=text, source=filepath))
+                    for text, line_num in parsed:
+                        source = f"{filepath}:{line_num}"
+                        requirements.append(DocRequirement(text=text, source=source))
         return requirements
 
 
@@ -114,14 +116,15 @@ class TargetRequirementExtractor:
             for filename in files:
                 filepath = os.path.join(root, filename)
                 with open(filepath, "r", errors="ignore") as f:
-                    for line in f:
+                    for line_num, line in enumerate(f, 1):
                         lower = line.lower()
                         if "req: " in lower:
                             idx = lower.index("req: ")
                             text = line[idx + 5:].strip()
                             text = text.removesuffix('"""').removesuffix("'''")
                             if text and 'req-ignore' not in text:
-                                results.append(TargetRequirement(text=text, source=filepath))
+                                source = f"{filepath}:{line_num}"
+                                results.append(TargetRequirement(text=text, source=source))
         return results
 
 

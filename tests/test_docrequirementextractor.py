@@ -20,9 +20,9 @@ class TestExtract:
             result = extractor.extract(tmpdir)
             assert len(result) == 2
             assert result[0].text == "REQ1: The system shall authenticate users"
-            assert result[0].source == md_file
+            assert result[0].source == f"{md_file}:3"
             assert result[1].text == "REQ2: The system shall log events"
-            assert result[1].source == md_file
+            assert result[1].source == f"{md_file}:4"
 
     def test_ignores_non_md_files(self):
         """REQ: Scan the reqs directory recursively for files with the .md extension"""
@@ -37,6 +37,7 @@ class TestExtract:
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "REQ1: The system shall authenticate users"
+            assert result[0].source == f"{md_file}:3"
 
     def test_scans_nested_directories_recursively(self):
         """REQ: Scan the reqs directory recursively for files with the .md extension"""
@@ -53,15 +54,15 @@ class TestExtract:
             result = extractor.extract(tmpdir)
             assert len(result) == 2
             assert result[0].text == "REQ1: Top level requirement"
-            assert result[0].source == top_file
+            assert result[0].source == f"{top_file}:3"
             assert result[1].text == "REQ2: Nested requirement"
-            assert result[1].source == nested_file
+            assert result[1].source == f"{nested_file}:3"
 
     def test_uses_custom_parser(self):
         """REQ: Invoke the MarkdownParser on each discovered markdown file"""
         class CustomParser:
             def parse(self, content):
-                return ["CUSTOM_PARSED"]
+                return [("CUSTOM_PARSED", 1)]
         with tempfile.TemporaryDirectory() as tmpdir:
             md_file = os.path.join(tmpdir, "test.md")
             with open(md_file, "w") as f:
@@ -70,7 +71,7 @@ class TestExtract:
             result = extractor.extract(tmpdir)
             assert len(result) == 1
             assert result[0].text == "CUSTOM_PARSED"
-            assert result[0].source == md_file
+            assert ":1" in result[0].source
 
 
 class TestConstructor:
@@ -85,8 +86,8 @@ class TestConstructor:
         extractor = DocRequirementExtractor(parser=fake)
         assert extractor.parser is fake
 
-    def test_pairs_requirement_with_source_file_path(self):
-        """REQ: Pair each extracted doc requirement text with its source file path as a DocRequirement named tuple"""
+    def test_pairs_requirement_with_source_file_path_and_line(self):
+        """REQ: Pair each extracted doc requirement text with its source file path and line number (e.g. `filename.md:221`) as a DocRequirement named tuple"""
         with tempfile.TemporaryDirectory() as tmpdir:
             md_file = os.path.join(tmpdir, "reqs.md")
             with open(md_file, "w") as f:
@@ -96,4 +97,4 @@ class TestConstructor:
             assert len(result) == 1
             assert isinstance(result[0], DocRequirement)
             assert result[0].text == "My requirement"
-            assert result[0].source == md_file
+            assert result[0].source == f"{md_file}:3"
